@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipline
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,23 +16,14 @@ jobs:
       - name: Login Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build Docker image
+      - name: Build image
         run: docker build -t ducanhdev9421/demo-cicd:latest .
 
-      - name: Push Docker image
+      - name: Push image
         run: docker push ducanhdev9421/demo-cicd:latest
 
-      - name: Deploy lên DevOps Classroom
+      - name: Deploy
         run: |
           REPO="ducanhdev9421/demo-cicd"
           CONTAINER_PORT=8080
-          RESPONSE=$(curl -sS -w "\n%{http_code}" -X POST "${{ secrets.DEPLOY_URL }}?repo=$REPO&tag=latest&slot=2&container_port=$CONTAINER_PORT&strict_container_port=0")
-          BODY=$(echo "$RESPONSE" | sed "$d")
-          CODE=$(echo "$RESPONSE" | tail -n1)
-          echo "Webhook HTTP: $CODE"
-          if [ "$CODE" -lt 200 ] || [ "$CODE" -ge 300 ]; then
-            echo "Deploy thất bại"
-            echo "$BODY"
-            exit 1
-          fi
-          echo "Deploy thành công"
+          curl -X POST "${{ secrets.DEPLOY_URL }}?repo=$REPO&tag=latest&slot=2&container_port=$CONTAINER_PORT"
